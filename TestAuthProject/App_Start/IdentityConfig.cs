@@ -95,5 +95,9 @@ namespace TestAuthProject
         {
             return new ApplicationSignInManager(context.GetUserManager<ApplicationUserManager>(), context.Authentication);
         }
+
+        private bool checkPassword(ApplicationUser user, string password) {
+            return true;
+        }
     }
 }

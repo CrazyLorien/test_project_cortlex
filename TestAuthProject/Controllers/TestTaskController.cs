@@ -4,6 +4,10 @@ using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using TestAuthProject.Models;
+using System;
+using System.Security.Cryptography;
+using TestAuth.Helpers;
+using TestAuth.Models;
 
 namespace TestAuthProject.Controllers
 {
@@ -65,6 +69,38 @@ namespace TestAuthProject.Controllers
         {
             UserManager.UpdateSecurityStamp(id);
             return new EmptyResult();
+        }
+
+        public ActionResult TestSecurity() {
+            return View();
+        }
+
+        [HttpPost]
+        public ActionResult TestEncryption(Login login)
+        {
+            var cryptHelper = new CryptoHelper();
+
+            using (RijndaelManaged myRijndael = new RijndaelManaged())
+            {
+
+                myRijndael.GenerateKey();
+                myRijndael.GenerateIV();
+
+                var keyValuePairEncrypted =  cryptHelper.encryptKeysRSA2048(myRijndael.Key, myRijndael.IV);
+                var keyValuePairDecrypted = cryptHelper.decryptKeysRSA2048(keyValuePairEncrypted);
+                // Encrypt the string to an array of bytes. 
+                byte[] encrypted = cryptHelper.encrypt(login.Password, keyValuePairDecrypted.Item1, keyValuePairDecrypted.Item2);
+
+                // Decrypt the bytes to a string. 
+                string roundtrip = cryptHelper.descrypt(encrypted, myRijndael.Key, myRijndael.IV);
+
+                login.Encrypt = Convert.ToBase64String(encrypted);
+                login.Decrypt = roundtrip;
+
+                return Json(login);
+            }
+
+
         }
 
     }
